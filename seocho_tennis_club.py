@@ -24,12 +24,26 @@ MATCHES_FILE = os.path.join(DATA_DIR, "matches.json")
 # 운영 설정
 MIN_ATTENDANCE = 8
 MAX_ATTENDANCE = 16
-GAMES_PER_30MIN = 1
-OPERATION_HOURS = 3
 NUM_COURTS = 2
 COURT_NAMES = ["7번코트", "8번코트"]
 MATCH_DURATION_MIN = 30
-TIME_SLOTS = OPERATION_HOURS * 60 // MATCH_DURATION_MIN  # 6타임
+
+# 요일별 타임 스케줄 (시작시간 리스트)
+SCHEDULE = {
+    "목": {
+        "times": ["19:00", "19:30", "20:00", "20:30", "21:00"],
+        "label": "목요일 19:00 - 22:00",
+    },
+    "일": {
+        "times": ["17:00", "17:30", "18:00", "18:30", "19:00"],
+        "label": "일요일 17:00 - 20:00",
+    },
+}
+
+def get_today_schedule():
+    """오늘 요일에 맞는 스케줄 반환, 없으면 목요일 기본값"""
+    day_name = ["월", "화", "수", "목", "금", "토", "일"][datetime.now().weekday()]
+    return SCHEDULE.get(day_name, SCHEDULE["목"])
 
 
 # ==================== 디자인 테마 ====================
@@ -131,17 +145,22 @@ def get_month_range(date: datetime) -> tuple:
     return start, end
 
 
-def generate_random_matches(player_ids: List[str], num_courts: int = NUM_COURTS) -> List[dict]:
-    """2코트 동시 진행 매칭 생성 (30분 단위 타임슬롯)"""
+def generate_random_matches(player_ids: List[str], schedule=None, num_courts: int = NUM_COURTS) -> List[dict]:
+    """2코트 동시 진행 매칭 생성 (시간대별, 코트 공정 배분)"""
     if len(player_ids) < 4:
         return []
 
+    if schedule is None:
+        schedule = get_today_schedule()
+    time_labels = schedule["times"]
+
     matches = []
     play_count = {pid: 0 for pid in player_ids}
+    court_count = {pid: {court: 0 for court in COURT_NAMES} for pid in player_ids}
     match_num = 0
 
-    for time_slot in range(TIME_SLOTS):
-        # 참여 횟수가 적은 순으로 정렬
+    for slot_idx, start_time in enumerate(time_labels):
+        # 참여 횟수가 적은 순 → 같으면 랜덤
         sorted_players = sorted(player_ids, key=lambda x: (play_count[x], random.random()))
 
         # 이번 타임에 배정할 코트 수 결정 (인원 부족 시 1코트만)
@@ -151,24 +170,42 @@ def generate_random_matches(player_ids: List[str], num_courts: int = NUM_COURTS)
 
         needed = courts_this_slot * 4
         selected = sorted_players[:needed]
-        random.shuffle(selected)
 
-        for court_idx in range(courts_this_slot):
-            court_players = selected[court_idx * 4:(court_idx + 1) * 4]
+        # 코트 공정 배분: 각 선수의 코트 사용 횟수를 고려하여 배정
+        if courts_this_slot == 2 and len(selected) == 8:
+            # 8명을 두 코트에 배분할 때, 코트 편중을 줄이도록 배정
+            random.shuffle(selected)
+            # 각 선수의 7번코트 사용비율 계산 (낮은 사람이 7번코트로)
+            court0_name = COURT_NAMES[0]
+            court1_name = COURT_NAMES[1]
+            selected.sort(key=lambda x: (court_count[x][court0_name] - court_count[x][court1_name], random.random()))
+            group_a = selected[:4]  # 7번코트 적게 간 사람들
+            group_b = selected[4:]  # 8번코트 적게 간 사람들
+            random.shuffle(group_a)
+            random.shuffle(group_b)
+            groups = [group_a, group_b]
+        else:
+            random.shuffle(selected)
+            groups = [selected[i*4:(i+1)*4] for i in range(courts_this_slot)]
+
+        for court_idx, court_players in enumerate(groups):
             team1 = court_players[:2]
             team2 = court_players[2:]
             match_num += 1
+            court_name = COURT_NAMES[court_idx] if court_idx < len(COURT_NAMES) else f"{court_idx+1}번코트"
 
             matches.append({
                 "match_num": match_num,
-                "time_slot": time_slot + 1,
-                "court": COURT_NAMES[court_idx] if court_idx < len(COURT_NAMES) else f"{court_idx+1}번코트",
+                "time_slot": slot_idx + 1,
+                "start_time": start_time,
+                "court": court_name,
                 "team1": team1,
                 "team2": team2,
             })
 
             for pid in court_players:
                 play_count[pid] += 1
+                court_count[pid][court_name] += 1
 
     return matches
 
@@ -309,7 +346,7 @@ def create_member_card(name: str, subtitle: str = None, on_edit=None, on_delete=
 
 def create_match_result_card(match_num: int, team1_names: str, team2_names: str,
                               score1: int, score2: int, on_delete=None,
-                              court: str = "", time_slot: int = 0):
+                              court: str = "", time_slot: int = 0, start_time: str = ""):
     """경기 결과 카드 컴포넌트"""
     is_draw = score1 == score2
     is_team1_winner = score1 > score2
@@ -360,6 +397,16 @@ def create_match_result_card(match_num: int, team1_names: str, team2_names: str,
             border_radius=8,
         )
 
+    # 시작시간 배지
+    time_badge = None
+    if start_time:
+        time_badge = ft.Container(
+            content=ft.Text(start_time, size=10, color=AppTheme.PRIMARY, weight=ft.FontWeight.BOLD),
+            bgcolor=AppTheme.ACCENT,
+            padding=ft.padding.symmetric(horizontal=8, vertical=2),
+            border_radius=8,
+        )
+
     return ft.Container(
         content=ft.Column([
             ft.Row([
@@ -370,6 +417,7 @@ def create_match_result_card(match_num: int, team1_names: str, team2_names: str,
                     border_radius=12,
                 ),
                 court_badge if court_badge else ft.Container(),
+                time_badge if time_badge else ft.Container(),
                 result_badge if result_badge else ft.Container(),
                 ft.Container(expand=True),
                 ft.IconButton(
@@ -1352,16 +1400,18 @@ class TennisClubApp:
         current_slot = 0
         for match in self.auto_match_schedule:
             time_slot = match.get("time_slot", 0)
+            start_time = match.get("start_time", "")
             court = match.get("court", "")
             team1_names = self.get_member_names(match["team1"])
             team2_names = self.get_member_names(match["team2"])
 
-            # 타임슬롯 구분선
+            # 타임슬롯 구분선 (시작시간 표시)
             if time_slot != current_slot:
                 current_slot = time_slot
+                time_label = f"── {time_slot}타임 {start_time} ──" if start_time else f"── {time_slot}타임 ──"
                 match_list.controls.append(
                     ft.Container(
-                        content=ft.Text(f"── {time_slot}타임 ({MATCH_DURATION_MIN}분) ──",
+                        content=ft.Text(time_label,
                                         size=13, weight=ft.FontWeight.BOLD,
                                         color=AppTheme.PRIMARY, text_align=ft.TextAlign.CENTER),
                         padding=ft.padding.only(top=8, bottom=4),
@@ -1399,8 +1449,17 @@ class TennisClubApp:
             self.page.update()
             return
 
-        self.auto_match_schedule = generate_random_matches(attendees)
+        # 경기 날짜의 요일에 맞는 스케줄 사용
+        try:
+            match_dt = datetime.strptime(self.match_date, "%Y-%m-%d")
+            day_name = ["월", "화", "수", "목", "금", "토", "일"][match_dt.weekday()]
+            schedule = SCHEDULE.get(day_name, SCHEDULE["목"])
+        except Exception:
+            schedule = get_today_schedule()
+
+        self.auto_match_schedule = generate_random_matches(attendees, schedule=schedule)
         total_matches = len(self.auto_match_schedule)
+        num_slots = len(schedule["times"])
 
         match_list = ft.ListView(height=380, spacing=4)
         self._build_match_list_controls(match_list)
@@ -1410,7 +1469,7 @@ class TennisClubApp:
             self.show_auto_match_score_input()
 
         def regenerate_matches(e):
-            self.auto_match_schedule = generate_random_matches(attendees)
+            self.auto_match_schedule = generate_random_matches(attendees, schedule=schedule)
             self._build_match_list_controls(match_list)
             self.page.update()
 
@@ -1422,8 +1481,8 @@ class TennisClubApp:
                         ft.Icon(ft.Icons.PEOPLE, size=18, color=AppTheme.PRIMARY),
                         ft.Text(f"출석자: {len(attendees)}명", size=14, color=AppTheme.TEXT_SECONDARY),
                         ft.Container(width=8),
-                        ft.Icon(ft.Icons.GRID_VIEW, size=18, color=AppTheme.SECONDARY),
-                        ft.Text(f"{', '.join(COURT_NAMES)}", size=14, color=AppTheme.TEXT_SECONDARY),
+                        ft.Icon(ft.Icons.SCHEDULE, size=18, color=AppTheme.SECONDARY),
+                        ft.Text(f"{num_slots}타임 · {', '.join(COURT_NAMES)}", size=14, color=AppTheme.TEXT_SECONDARY),
                     ], spacing=4),
                     ft.Container(height=4),
                     match_list,
@@ -1447,16 +1506,18 @@ class TennisClubApp:
         current_slot = 0
         for match in self.auto_match_schedule:
             time_slot = match.get("time_slot", 0)
+            start_time = match.get("start_time", "")
             court = match.get("court", "")
             team1_names = self.get_member_names(match["team1"])
             team2_names = self.get_member_names(match["team2"])
 
-            # 타임슬롯 구분선
+            # 타임슬롯 구분선 (시작시간 포함)
             if time_slot != current_slot:
                 current_slot = time_slot
+                time_label = f"── {time_slot}타임 {start_time} ──" if start_time else f"── {time_slot}타임 ──"
                 score_list.controls.append(
                     ft.Container(
-                        content=ft.Text(f"── {time_slot}타임 ──",
+                        content=ft.Text(time_label,
                                         size=14, weight=ft.FontWeight.BOLD,
                                         color=AppTheme.PRIMARY, text_align=ft.TextAlign.CENTER),
                         padding=ft.padding.only(top=12, bottom=4),
@@ -1562,6 +1623,7 @@ class TennisClubApp:
                         "winner": winner,
                         "court": match.get("court", ""),
                         "time_slot": match.get("time_slot", 0),
+                        "start_time": match.get("start_time", ""),
                         "recorded_by": self.current_user or "",
                     }
                     self.matches["matches"].append(new_match)
@@ -1606,6 +1668,7 @@ class TennisClubApp:
                         on_delete=lambda e, m=match: self.delete_match(m),
                         court=match.get("court", ""),
                         time_slot=match.get("time_slot", 0),
+                        start_time=match.get("start_time", ""),
                     )
                 )
 
