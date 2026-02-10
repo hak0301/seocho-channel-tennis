@@ -1,0 +1,37 @@
+[project]
+name = "seocho-channel"
+version = "1.0.0"
+description = "서초 채널 테니스 클럽 관리 앱"
+authors = [
+    {name = "Seocho Channel Tennis Club"}
+]
+requires-python = ">=3.8"
+dependencies = [
+    "flet>=0.21.0",
+]
+
+[tool.flet]
+# 앱 기본 설정
+org = "com.seochochannel"
+product = "seocho-channel"
+project = "seocho_tennis_club"
+
+# 앱 아이콘
+icon = "assets/icon.png"
+
+# 스플래시 화면 색상
+splash_color = "#1B5E20"
+splash_dark_color = "#0D3311"
+
+[tool.flet.android]
+# Android 빌드 설정
+adaptive_icon_background = "#1B5E20"
+package = "com.seochochannel.tennis"
+
+[tool.flet.ios]
+# iOS 빌드 설정
+bundle_id = "com.seochochannel.tennis"
+
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.api"

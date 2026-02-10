@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.git
+*.apk
+data/
+storage/
+seocho_channel/
+fly.toml
+BUILD_GUIDE.md
+pyproject.toml
+.gitignore
