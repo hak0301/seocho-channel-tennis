@@ -544,12 +544,19 @@ class TennisClubApp:
         """로그인 화면 - 이름 선택 또는 입력"""
         member_names = [m["name"] for m in self.members.get("members", [])]
 
+        typed_name = {"value": ""}
+
+        def on_name_change(e):
+            typed_name["value"] = e.control.value or ""
+
         name_field = ft.TextField(
             label="이름 직접 입력",
             border_radius=12,
             border_color=AppTheme.PRIMARY_LIGHT,
             focused_border_color=AppTheme.PRIMARY,
             prefix_icon=ft.Icons.PERSON,
+            on_change=on_name_change,
+            on_submit=lambda e: login_with_name(typed_name["value"]),
         )
 
         # Firebase 연결 상태 표시
@@ -576,15 +583,20 @@ class TennisClubApp:
 
         def login_with_name(name):
             if name and name.strip():
-                self.current_user = name.strip()
-                self.page.clean()
-                self.setup_ui()
+                try:
+                    self.current_user = name.strip()
+                    self.page.clean()
+                    self.setup_ui()
+                except Exception as ex:
+                    self.page.clean()
+                    self.page.add(ft.Text(f"오류: {ex}", color="red", size=16))
+                    self.page.update()
 
         def on_member_click(e, name):
             login_with_name(name)
 
         def on_login_click(e):
-            login_with_name(name_field.value)
+            login_with_name(typed_name["value"] or name_field.value)
 
         # 기존 회원 버튼 리스트
         member_buttons = []
