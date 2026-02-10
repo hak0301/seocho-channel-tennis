@@ -275,7 +275,7 @@ def create_member_card(name: str, subtitle: str = None, on_edit=None, on_delete=
                 height=44,
                 bgcolor=AppTheme.PRIMARY_LIGHT,
                 border_radius=22,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             ),
             ft.Column([
                 ft.Text(name, size=16, weight=ft.FontWeight.W_600, color=AppTheme.TEXT_PRIMARY),
@@ -452,7 +452,7 @@ def create_ranking_card(rank: int, name: str, points: int, wins: int, losses: in
                 height=44,
                 bgcolor=rank_bg,
                 border_radius=12,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             ),
             ft.Column([
                 ft.Text(name, size=16, weight=ft.FontWeight.W_600, color=AppTheme.TEXT_PRIMARY),
@@ -597,7 +597,7 @@ class TennisClubApp:
                             width=40, height=40,
                             bgcolor=AppTheme.PRIMARY_LIGHT,
                             border_radius=20,
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Text(name, size=15, weight=ft.FontWeight.W_500, color=AppTheme.TEXT_PRIMARY),
                     ], spacing=12),
@@ -619,7 +619,7 @@ class TennisClubApp:
         ) if member_buttons else ft.Container(
             content=ft.Text("등록된 회원이 없습니다", size=14, color=AppTheme.TEXT_SECONDARY),
             padding=20,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
         content = ft.Column([
@@ -630,7 +630,7 @@ class TennisClubApp:
                         width=72, height=72,
                         bgcolor="#CCFF00",
                         border_radius=20,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Text("서초 채널", size=28, weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_ON_PRIMARY),
                     ft.Text("TENNIS CLUB", size=14, color=ft.Colors.with_opacity(0.8, AppTheme.TEXT_ON_PRIMARY)),
@@ -640,7 +640,7 @@ class TennisClubApp:
                 padding=ft.padding.only(top=60, bottom=30),
                 bgcolor=AppTheme.PRIMARY,
                 border_radius=ft.border_radius.only(bottom_left=32, bottom_right=32),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             ),
 
             ft.Container(
@@ -803,7 +803,7 @@ class TennisClubApp:
                             height=56,
                             bgcolor="#CCFF00",
                             border_radius=16,
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Column([
                             ft.Text("서초 채널", size=26, weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_ON_PRIMARY),
@@ -1060,7 +1060,7 @@ class TennisClubApp:
             ft.Container(
                 content=create_primary_button("출석 저장", ft.Icons.SAVE, self.save_attendance, width=200),
                 padding=20,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             ),
         ], spacing=0, expand=True)
 
@@ -1096,7 +1096,7 @@ class TennisClubApp:
                         height=40,
                         bgcolor=AppTheme.PRIMARY if is_checked else AppTheme.ACCENT,
                         border_radius=20,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Text(member["name"], size=15, color=AppTheme.TEXT_PRIMARY, expand=True),
                     ft.Checkbox(
@@ -1175,7 +1175,7 @@ class TennisClubApp:
                             height=36,
                             bgcolor=AppTheme.PRIMARY,
                             border_radius=18,
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Text(stat["name"], size=14, color=AppTheme.TEXT_PRIMARY, expand=True),
                         ft.Text(f"{stat['count']}/{total_days}", size=14, color=AppTheme.TEXT_SECONDARY),
@@ -1183,7 +1183,7 @@ class TennisClubApp:
                             content=ft.Text(f"{rate:.0f}%", size=14, weight=ft.FontWeight.BOLD,
                                           color=AppTheme.SUCCESS if rate >= 75 else AppTheme.WARNING if rate >= 50 else AppTheme.ERROR),
                             width=50,
-                            alignment=ft.alignment.center_right,
+                            alignment=ft.Alignment(1, 0),
                         ),
                     ], spacing=12),
                     padding=12,
@@ -1353,7 +1353,7 @@ class TennisClubApp:
                                         size=13, weight=ft.FontWeight.BOLD,
                                         color=AppTheme.PRIMARY, text_align=ft.TextAlign.CENTER),
                         padding=ft.padding.only(top=8, bottom=4),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     )
                 )
 
@@ -1448,7 +1448,7 @@ class TennisClubApp:
                                         size=14, weight=ft.FontWeight.BOLD,
                                         color=AppTheme.PRIMARY, text_align=ft.TextAlign.CENTER),
                         padding=ft.padding.only(top=12, bottom=4),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     )
                 )
 
@@ -1577,7 +1577,7 @@ class TennisClubApp:
                         ft.Text("경기 기록이 없습니다", color=AppTheme.TEXT_SECONDARY),
                     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=12),
                     padding=40,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 )
             )
         else:
@@ -1842,7 +1842,7 @@ class TennisClubApp:
                         ft.Text("경기 기록이 없습니다", color=AppTheme.TEXT_SECONDARY),
                     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=12),
                     padding=40,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 )
             )
         else:
