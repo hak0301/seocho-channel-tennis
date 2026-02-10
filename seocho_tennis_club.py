@@ -937,6 +937,35 @@ class TennisClubApp:
                 content=menu_bar,
                 padding=ft.padding.symmetric(horizontal=20),
             ),
+
+            # 클럽 사진
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("GALLERY", size=14, weight=ft.FontWeight.BOLD,
+                            color=AppTheme.TEXT_SECONDARY, text_align=ft.TextAlign.CENTER),
+                    ft.Container(
+                        content=ft.Image(
+                            src="photo1.jpg",
+                            fit=ft.ImageFit.COVER,
+                            border_radius=ft.border_radius.all(16),
+                        ),
+                        border_radius=16,
+                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                        shadow=AppTheme.CARD_SHADOW,
+                    ),
+                    ft.Container(
+                        content=ft.Image(
+                            src="photo2.jpg",
+                            fit=ft.ImageFit.COVER,
+                            border_radius=ft.border_radius.all(16),
+                        ),
+                        border_radius=16,
+                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                        shadow=AppTheme.CARD_SHADOW,
+                    ),
+                ], spacing=12, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                padding=ft.padding.symmetric(horizontal=20, vertical=16),
+            ),
         ], spacing=0, scroll=ft.ScrollMode.AUTO, expand=True)
 
         self.tab_content.content = content
@@ -2086,4 +2115,5 @@ if __name__ == "__main__":
         view=None,  # 웹 서버 모드 (브라우저 자동 열기 안 함)
         host="0.0.0.0",
         port=port,
+        assets_dir="assets",
     )
